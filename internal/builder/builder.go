@@ -522,13 +522,13 @@ func buildHysteria2Options(u *url.URL, skipCertVerify bool) (option.Hysteria2Out
 	if hopInterval := query.Get("hop_interval"); hopInterval != "" {
 		d, err := time.ParseDuration(hopInterval)
 		if err != nil {
-			return option.Hysteria2OutboundOptions{}, fmt.Errorf("invalid hop_interval %q", hopInterval)
+			return option.Hysteria2OutboundOptions{}, fmt.Errorf("invalid hop_interval %q: %w", hopInterval, err)
 		}
 		opts.HopInterval = badoption.Duration(d)
 	} else if hopInterval := query.Get("hopInterval"); hopInterval != "" {
 		d, err := time.ParseDuration(hopInterval)
 		if err != nil {
-			return option.Hysteria2OutboundOptions{}, fmt.Errorf("invalid hopInterval %q", hopInterval)
+			return option.Hysteria2OutboundOptions{}, fmt.Errorf("invalid hopInterval %q: %w", hopInterval, err)
 		}
 		opts.HopInterval = badoption.Duration(d)
 	}
