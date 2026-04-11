@@ -146,6 +146,9 @@ func newPool(ctx context.Context, _ adapter.Router, logger log.ContextLogger, ta
 		logger.Warn("monitor manager is nil, skipping node registration")
 	}
 
+	// Register this pool outbound in the dialer registry for GeoIP router
+	registerDialer(tag, p)
+
 	return p, nil
 }
 

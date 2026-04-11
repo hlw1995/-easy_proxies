@@ -88,10 +88,16 @@
       gap: 10px;
     }
     .brand-icon {
-      width: 24px; height: 24px;
-      background: linear-gradient(135deg, var(--primary), #8b5cf6);
-      border-radius: 6px;
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.15));
+      border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 12px rgba(96,165,250,0.3);
+      animation: brandGlow 3s ease-in-out infinite;
+    }
+    @keyframes brandGlow {
+      0%, 100% { box-shadow: 0 0 8px rgba(96,165,250,0.2); }
+      50% { box-shadow: 0 0 16px rgba(139,92,246,0.4); }
     }
     .nav { padding: 16px 0; flex: 1; }
     .nav-item {
@@ -172,6 +178,12 @@
     }
     .tab-content { display: none; }
     .tab-content.active { display: block; animation: fadeIn 0.3s; }
+    .setting-input {
+      background: var(--bg-input); border: 1px solid var(--border); color: var(--text-main);
+      padding: 8px 12px; border-radius: 6px; font-family: var(--font-mono); font-size: 13px;
+      outline: none; width: 100%; box-sizing: border-box; transition: border-color 0.2s;
+    }
+    .setting-input:focus { border-color: var(--primary); }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
     /* UI Components */
@@ -290,6 +302,22 @@
     .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
     
     .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .checkbox-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .checkbox-row:hover { border-color: var(--primary); }
+    .checkbox-row input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; margin: 0; }
+    .checkbox-row label { margin: 0; cursor: pointer; font-size: 13px; color: var(--text-main); }
+    .checkbox-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      margin-bottom: 16px;
+    }
     label { font-size: 12px; color: var(--text-muted); }
     input[type="text"], input[type="password"], input[type="number"] {
       background: var(--bg-input); border: 1px solid var(--border); color: var(--text-main);
@@ -361,7 +389,12 @@
   <aside class="sidebar">
     <div class="brand">
       <div class="brand-icon">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M2 16l4-4 4 6 4-10 4 4 4-6" stroke="url(#brandGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <animate attributeName="stroke-dasharray" values="0,100;50,0;0,100" dur="3s" repeatCount="indefinite"/>
+          </path>
+          <defs><linearGradient id="brandGrad" x1="0" y1="0" x2="24" y2="0"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#a78bfa"/></linearGradient></defs>
+        </svg>
       </div>
       Easy Proxies
     </div>
@@ -382,9 +415,10 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
         控制台日志
       </div>
-    </div>
-    <div style="padding: 20px; border-top: 1px solid var(--border);">
-      <button class="btn" style="width: 100%; justify-content: center;" onclick="showSettingsModal()">系统设置</button>
+      <div class="nav-item" onclick="switchTab('settings')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        系统设置
+      </div>
     </div>
     <div style="padding: 0 20px 16px; text-align: center;">
       <a href="https://github.com/jasonwong1991/easy_proxies" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:6px; color:var(--text-muted); text-decoration:none; font-size:12px; padding:6px 10px; border-radius:6px; border:1px solid var(--border); transition:all 0.2s;" onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--text-main)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
@@ -609,6 +643,156 @@
         </div>
       </div>
 
+      <!-- Settings Tab -->
+      <div id="settingsTab" class="tab-content">
+        <div style="max-width: 800px; margin: 0 auto;">
+          <div style="font-size: 20px; font-weight: 700; margin-bottom: 24px; color: var(--text-main);">系统设置</div>
+          <form onsubmit="handleSettingsSave(event)">
+
+            <div class="panel" style="margin-bottom: 16px;">
+              <div class="panel-header"><div class="panel-title">基础配置</div></div>
+              <div style="padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                  <label>运行模式 (Mode)</label>
+                  <select id="settingMode" class="setting-input">
+                    <option value="pool">pool - 单端口负载池</option>
+                    <option value="multi-port">multi-port - 多端口模式</option>
+                    <option value="hybrid">hybrid - 混合模式</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>外部 IP (External IP)</label>
+                  <input type="text" id="settingExternalIP" class="setting-input" placeholder="0.0.0.0" />
+                </div>
+                <div class="form-group">
+                  <label>探测目标 (Probe Target)</label>
+                  <input type="text" id="settingProbeTarget" class="setting-input" placeholder="www.apple.com:80" />
+                </div>
+                <div class="form-group" style="justify-content:flex-end;">
+                  <label>&nbsp;</label>
+                  <div class="checkbox-row"><input type="checkbox" id="settingSkipCertVerify" /><label for="settingSkipCertVerify">跳过 SSL 证书验证</label></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel" style="margin-bottom: 16px;">
+              <div class="panel-header"><div class="panel-title">监听配置 (Listener)</div></div>
+              <div style="padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group"><label>监听地址</label><input type="text" id="settingListenerAddr" class="setting-input" placeholder="0.0.0.0" /></div>
+                <div class="form-group"><label>监听端口</label><input type="number" id="settingListenerPort" class="setting-input" min="1" max="65535" placeholder="7890" /></div>
+                <div class="form-group"><label>用户名 (可选)</label><input type="text" id="settingListenerUser" class="setting-input" /></div>
+                <div class="form-group"><label>密码 (可选)</label><input type="password" id="settingListenerPass" class="setting-input" /></div>
+              </div>
+            </div>
+
+            <div class="panel" style="margin-bottom: 16px;">
+              <div class="panel-header"><div class="panel-title">多端口配置 (Multi-Port)</div></div>
+              <div style="padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group"><label>监听地址</label><input type="text" id="settingMPAddr" class="setting-input" placeholder="0.0.0.0" /></div>
+                <div class="form-group"><label>起始端口</label><input type="number" id="settingMPBasePort" class="setting-input" min="1" max="65535" placeholder="10000" /></div>
+                <div class="form-group"><label>用户名 (可选)</label><input type="text" id="settingMPUser" class="setting-input" /></div>
+                <div class="form-group"><label>密码 (可选)</label><input type="password" id="settingMPPass" class="setting-input" /></div>
+              </div>
+            </div>
+
+            <div class="panel" style="margin-bottom: 16px;">
+              <div class="panel-header"><div class="panel-title">节点池配置 (Pool)</div></div>
+              <div style="padding: 16px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                  <label>调度模式</label>
+                  <select id="settingPoolMode" class="setting-input">
+                    <option value="random">random - 随机</option>
+                    <option value="round-robin">round-robin - 轮询</option>
+                    <option value="balance">balance - 均衡</option>
+                  </select>
+                </div>
+                <div class="form-group"><label>故障阈值</label><input type="number" id="settingPoolFailure" class="setting-input" min="1" max="100" placeholder="3" /></div>
+                <div class="form-group"><label>黑名单时长</label><input type="text" id="settingPoolBlacklist" class="setting-input" placeholder="24h" /></div>
+              </div>
+            </div>
+
+            <div class="panel" style="margin-bottom: 16px;">
+              <div class="panel-header"><div class="panel-title">管理面板 (Management)</div></div>
+              <div style="padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group"><label>监听地址</label><input type="text" id="settingMgmtListen" class="setting-input" placeholder="0.0.0.0:8080" /></div>
+                <div class="form-group"><label>访问密码</label><input type="password" id="settingMgmtPassword" class="setting-input" /></div>
+              </div>
+            </div>
+
+            <div class="panel" style="margin-bottom: 16px;">
+              <div class="panel-header"><div class="panel-title">GeoIP 地域路由</div></div>
+              <div style="padding: 16px;">
+                <div class="checkbox-grid">
+                  <div class="checkbox-row"><input type="checkbox" id="settingGeoIPEnabled" /><label for="settingGeoIPEnabled">启用 GeoIP 地域路由</label></div>
+                  <div class="checkbox-row"><input type="checkbox" id="settingGeoIPAutoUpdate" /><label for="settingGeoIPAutoUpdate">自动更新数据库</label></div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                  <div class="form-group"><label>数据库路径</label><input type="text" id="settingGeoIPDBPath" class="setting-input" placeholder="./GeoLite2-Country.mmdb" /></div>
+                  <div class="form-group"><label>路由监听地址</label><input type="text" id="settingGeoIPListen" class="setting-input" /></div>
+                  <div class="form-group"><label>路由端口</label><input type="number" id="settingGeoIPPort" class="setting-input" min="1" max="65535" placeholder="2323" /></div>
+                  <div class="form-group"><label>更新间隔</label><input type="text" id="settingGeoIPUpdateInterval" class="setting-input" placeholder="24h" /></div>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">首次启用会自动下载 GeoIP 数据库（约 9MB），需重载核心生效</div>
+              </div>
+            </div>
+
+            <div class="panel" style="margin-bottom: 16px;">
+              <div class="panel-header"><div class="panel-title">日志配置</div></div>
+              <div style="padding: 16px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                  <div class="form-group">
+                    <label>日志输出</label>
+                    <select id="settingLogOutput" class="setting-input" onchange="toggleLogFileSettings()">
+                      <option value="stdout">仅控制台 (stdout)</option>
+                      <option value="file">控制台 + 文件 (stdout + file)</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="logFileSettings" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
+                  <div class="form-group"><label>单文件最大 MB</label><input type="number" id="settingLogMaxSize" class="setting-input" min="1" max="1024" placeholder="50" /></div>
+                  <div class="form-group"><label>保留旧日志个数</label><input type="number" id="settingLogMaxBackups" class="setting-input" min="0" max="100" placeholder="3" /></div>
+                  <div class="form-group"><label>保留天数</label><input type="number" id="settingLogMaxAge" class="setting-input" min="0" max="365" placeholder="7" /></div>
+                  <div class="form-group" style="justify-content:flex-end;">
+                    <label>&nbsp;</label>
+                    <div class="checkbox-row"><input type="checkbox" id="settingLogCompress" /><label for="settingLogCompress">压缩旧日志</label></div>
+                  </div>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">日志设置需重启服务生效</div>
+              </div>
+            </div>
+
+            <div class="panel" style="margin-bottom: 16px;">
+              <div class="panel-header"><div class="panel-title">订阅配置</div></div>
+              <div style="padding: 16px;">
+                <div class="checkbox-grid">
+                  <div class="checkbox-row"><input type="checkbox" id="settingSubEnabled" /><label for="settingSubEnabled">启用订阅自动刷新</label></div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                  <div class="form-group">
+                    <label>刷新间隔</label>
+                    <select id="settingSubInterval" class="setting-input">
+                      <option value="10m">10 分钟</option><option value="30m">30 分钟</option>
+                      <option value="1h">1 小时</option><option value="3h">3 小时</option>
+                      <option value="6h">6 小时</option><option value="12h">12 小时</option>
+                      <option value="24h">24 小时</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group" style="margin-top: 12px;">
+                  <label>订阅链接 (每行一个 URL)</label>
+                  <textarea id="settingSubURLs" rows="4" class="setting-input" placeholder="https://example.com/subscribe?token=xxx" style="resize:vertical; font-size:12px;"></textarea>
+                </div>
+                <div style="font-size: 11px; color: var(--success); margin-top: 8px;">订阅配置变更保存后立即生效</div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px; padding: 8px 0 24px;">
+              <button type="submit" class="btn btn-primary" style="padding: 10px 32px; font-size: 14px;">保存配置</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
     </div>
   </main>
 
@@ -633,101 +817,6 @@
   </div>
 
   <!-- Settings Modal -->
-  <div class="modal-overlay" id="settingsOverlay">
-    <div class="modal">
-      <div class="modal-header">系统设置</div>
-      <form onsubmit="handleSettingsSave(event)">
-        <div class="modal-body">
-          <div class="form-group">
-            <label>外部 IP 地址 (External IP)</label>
-            <input type="text" id="settingExternalIP" placeholder="0.0.0.0" />
-          </div>
-          <div class="form-group">
-            <label>探测目标 (Probe Target)</label>
-            <input type="text" id="settingProbeTarget" placeholder="www.apple.com:80" />
-          </div>
-          <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px;">
-            <input type="checkbox" id="settingSkipCertVerify" />
-            <label>跳过 SSL 证书验证 (Skip Cert Verify)</label>
-          </div>
-          <div style="border-top: 1px solid var(--border); margin-top: 8px; padding-top: 12px;">
-            <div style="font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text-main);">📋 日志轮转配置</div>
-            <div class="form-group">
-              <label>日志输出 (Log Output)</label>
-              <select id="settingLogOutput" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-main); padding: 8px 12px; border-radius: 6px; font-family: var(--font-mono); font-size: 13px; outline: none;">
-                <option value="stdout">仅控制台 (stdout)</option>
-                <option value="file">控制台 + 文件 (stdout + file)</option>
-              </select>
-            </div>
-            <div id="logFileSettings">
-              <div class="form-group">
-                <label>单个日志最大 MB (Max Size)</label>
-                <input type="number" id="settingLogMaxSize" min="1" max="1024" placeholder="50" />
-              </div>
-              <div class="form-group">
-                <label>保留旧日志个数 (Max Backups)</label>
-                <input type="number" id="settingLogMaxBackups" min="0" max="100" placeholder="3" />
-              </div>
-              <div class="form-group">
-                <label>保留旧日志天数 (Max Age / Days)</label>
-                <input type="number" id="settingLogMaxAge" min="0" max="365" placeholder="7" />
-              </div>
-              <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px;">
-                <input type="checkbox" id="settingLogCompress" />
-                <label>压缩旧日志 (Compress)</label>
-              </div>
-            </div>
-            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
-              ℹ️ 日志设置保存后需重启服务生效
-            </div>
-          </div>
-
-          <div style="border-top: 1px solid var(--border); margin-top: 8px; padding-top: 12px;">
-            <div style="font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text-main);">🌍 GeoIP 地域标记 (重启后生效)</div>
-            <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px;">
-              <input type="checkbox" id="settingGeoIPEnabled" />
-              <label>启用 GeoIP 地域分区 (Enable GeoIP Region Tagging)</label>
-            </div>
-            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
-              ℹ️ 首次启用会自动下载 GeoIP 数据库（约 9MB），重启后生效
-            </div>
-          </div>
-
-          <div style="border-top: 1px solid var(--border); margin-top: 8px; padding-top: 12px;">
-            <div style="font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text-main);">🔗 订阅配置 (实时生效)</div>
-            <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px;">
-              <input type="checkbox" id="settingSubEnabled" />
-              <label>启用订阅自动刷新 (Enable Auto Refresh)</label>
-            </div>
-            <div class="form-group">
-              <label>刷新间隔 (Refresh Interval)</label>
-              <select id="settingSubInterval" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-main); padding: 8px 12px; border-radius: 6px; font-family: var(--font-mono); font-size: 13px; outline: none;">
-                <option value="10m">10 分钟</option>
-                <option value="30m">30 分钟</option>
-                <option value="1h">1 小时</option>
-                <option value="3h">3 小时</option>
-                <option value="6h">6 小时</option>
-                <option value="12h">12 小时</option>
-                <option value="24h">24 小时</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>订阅链接 (每行一个 URL)</label>
-              <textarea id="settingSubURLs" rows="5" placeholder="https://example.com/subscribe?token=xxx" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-main); padding: 8px 12px; border-radius: 6px; font-family: var(--font-mono); font-size: 12px; outline: none; resize: vertical;"></textarea>
-            </div>
-            <div style="font-size: 11px; color: var(--success); margin-top: 4px;">
-              ✅ 订阅设置保存后立即生效，无需重启
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn" onclick="document.getElementById('settingsOverlay').classList.remove('show')">取消</button>
-          <button type="submit" class="btn btn-primary">保存配置</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
   <!-- Node Edit Modal -->
   <div class="modal-overlay" id="nodeModalOverlay">
     <div class="modal">
@@ -760,6 +849,21 @@
 
   <div class="toast-container" id="toastContainer"></div>
 
+  <!-- Full-screen Loading Overlay -->
+  <div id="fullscreenLoading" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center;">
+    <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:32px 48px; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+      <div style="margin-bottom:16px;">
+        <svg width="40" height="40" viewBox="0 0 40 40" style="animation:spin 1s linear infinite;">
+          <circle cx="20" cy="20" r="16" fill="none" stroke="var(--border)" stroke-width="3"/>
+          <circle cx="20" cy="20" r="16" fill="none" stroke="var(--primary)" stroke-width="3" stroke-dasharray="80" stroke-dashoffset="60" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div id="fullscreenLoadingText" style="font-size:15px; font-weight:600; color:var(--text-main);">处理中...</div>
+      <div id="fullscreenLoadingSubtext" style="font-size:12px; color:var(--text-muted); margin-top:6px;"></div>
+    </div>
+  </div>
+  <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+
   <script>
     // JS Logic - Kept exact API calls from original
     let isAutoRefresh = true;
@@ -768,7 +872,18 @@
     let currentRegionFilter = 'all';
     let isEditMode = false;
     let configNodes = [];
-    let _savedSubSnapshot = ''; // snapshot of subscription config when settings modal opened
+    let _savedSubSnapshot = '';
+    let _savedCoreSnapshot = '';
+
+    function showFullscreenLoading(text, subtext) {
+      document.getElementById('fullscreenLoadingText').textContent = text || '处理中...';
+      document.getElementById('fullscreenLoadingSubtext').textContent = subtext || '';
+      const el = document.getElementById('fullscreenLoading');
+      el.style.display = 'flex';
+    }
+    function hideFullscreenLoading() {
+      document.getElementById('fullscreenLoading').style.display = 'none';
+    }
 
     // Chart instances
     let regionChartInst = null;
@@ -837,6 +952,7 @@
       } else {
         stopLogPolling();
       }
+      if (name === 'settings') loadSettingsPage();
     }
 
     function toggleAutoRefresh() {
@@ -1323,13 +1439,44 @@
     }
 
     // Settings
-    async function showSettingsModal() {
+    async function loadSettingsPage() {
       try {
         const r = await fetch('/api/settings'); const d = await r.json();
+        // General
+        document.getElementById('settingMode').value = d.mode || 'pool';
         document.getElementById('settingExternalIP').value = d.external_ip||'';
         document.getElementById('settingProbeTarget').value = d.probe_target||'';
         document.getElementById('settingSkipCertVerify').checked = d.skip_cert_verify||false;
-        // Log settings
+        // Listener
+        const ls = d.listener || {};
+        document.getElementById('settingListenerAddr').value = ls.address || '';
+        document.getElementById('settingListenerPort').value = ls.port || '';
+        document.getElementById('settingListenerUser').value = ls.username || '';
+        document.getElementById('settingListenerPass').value = ls.password || '';
+        // Multi-port
+        const mp = d.multi_port || {};
+        document.getElementById('settingMPAddr').value = mp.address || '';
+        document.getElementById('settingMPBasePort').value = mp.base_port || '';
+        document.getElementById('settingMPUser').value = mp.username || '';
+        document.getElementById('settingMPPass').value = mp.password || '';
+        // Pool
+        const pl = d.pool || {};
+        document.getElementById('settingPoolMode').value = pl.mode || 'random';
+        document.getElementById('settingPoolFailure').value = pl.failure_threshold || 3;
+        document.getElementById('settingPoolBlacklist').value = pl.blacklist_duration || '24h';
+        // Management
+        const mgmt = d.management || {};
+        document.getElementById('settingMgmtListen').value = mgmt.listen || '';
+        document.getElementById('settingMgmtPassword').value = mgmt.password || '';
+        // GeoIP
+        const geo = d.geoip || {};
+        document.getElementById('settingGeoIPEnabled').checked = geo.enabled || false;
+        document.getElementById('settingGeoIPDBPath').value = geo.database_path || '';
+        document.getElementById('settingGeoIPListen').value = geo.listen || '';
+        document.getElementById('settingGeoIPPort').value = geo.port || '';
+        document.getElementById('settingGeoIPAutoUpdate').checked = geo.auto_update_enabled || false;
+        document.getElementById('settingGeoIPUpdateInterval').value = geo.auto_update_interval || '24h0m0s';
+        // Log
         const logCfg = d.log || {};
         document.getElementById('settingLogOutput').value = logCfg.output || 'stdout';
         document.getElementById('settingLogMaxSize').value = logCfg.max_size || 50;
@@ -1337,17 +1484,10 @@
         document.getElementById('settingLogMaxAge').value = logCfg.max_age || 7;
         document.getElementById('settingLogCompress').checked = logCfg.compress || false;
         toggleLogFileSettings();
-
-        // GeoIP settings
-        const geoipCfg = d.geoip || {};
-        document.getElementById('settingGeoIPEnabled').checked = geoipCfg.enabled || false;
-
-        // Subscription settings
+        // Subscription
         try {
           const sr = await fetch('/api/subscription/config'); const sd = await sr.json();
           document.getElementById('settingSubEnabled').checked = sd.enabled || false;
-          document.getElementById('settingSubInterval').value = sd.interval || '1h0m0s';
-          // Normalize interval value to match select options
           const iv = sd.interval || '';
           const sel = document.getElementById('settingSubInterval');
           let matched = false;
@@ -1356,80 +1496,146 @@
           document.getElementById('settingSubURLs').value = (sd.subscriptions || []).join('\n');
           _savedSubSnapshot = JSON.stringify({urls: (sd.subscriptions || []).join('\n'), enabled: sd.enabled || false, interval: sel.value});
         } catch(e){}
-
-        document.getElementById('settingsOverlay').classList.add('show');
-      } catch(e){}
+        // Take core snapshot after all fields are populated
+        _savedCoreSnapshot = _buildCoreSnapshot();
+      } catch(e){ console.error('Failed to load settings:', e); }
+    }
+    function _buildCoreSnapshot() {
+      return JSON.stringify({
+        mode: document.getElementById('settingMode').value,
+        external_ip: document.getElementById('settingExternalIP').value,
+        probe_target: document.getElementById('settingProbeTarget').value,
+        skip_cert_verify: document.getElementById('settingSkipCertVerify').checked,
+        listener_addr: document.getElementById('settingListenerAddr').value,
+        listener_port: document.getElementById('settingListenerPort').value,
+        listener_user: document.getElementById('settingListenerUser').value,
+        listener_pass: document.getElementById('settingListenerPass').value,
+        mp_addr: document.getElementById('settingMPAddr').value,
+        mp_base_port: document.getElementById('settingMPBasePort').value,
+        mp_user: document.getElementById('settingMPUser').value,
+        mp_pass: document.getElementById('settingMPPass').value,
+        pool_mode: document.getElementById('settingPoolMode').value,
+        pool_failure: document.getElementById('settingPoolFailure').value,
+        pool_blacklist: document.getElementById('settingPoolBlacklist').value,
+        mgmt_listen: document.getElementById('settingMgmtListen').value,
+        mgmt_password: document.getElementById('settingMgmtPassword').value,
+        geoip_enabled: document.getElementById('settingGeoIPEnabled').checked,
+        geoip_db: document.getElementById('settingGeoIPDBPath').value,
+        geoip_listen: document.getElementById('settingGeoIPListen').value,
+        geoip_port: document.getElementById('settingGeoIPPort').value,
+        geoip_auto: document.getElementById('settingGeoIPAutoUpdate').checked,
+        geoip_interval: document.getElementById('settingGeoIPUpdateInterval').value,
+        log_output: document.getElementById('settingLogOutput').value,
+        log_max_size: document.getElementById('settingLogMaxSize').value,
+        log_max_backups: document.getElementById('settingLogMaxBackups').value,
+        log_max_age: document.getElementById('settingLogMaxAge').value,
+        log_compress: document.getElementById('settingLogCompress').checked,
+      });
     }
     function toggleLogFileSettings() {
       const output = document.getElementById('settingLogOutput').value;
-      document.getElementById('logFileSettings').style.display = output === 'file' ? 'block' : 'none';
+      document.getElementById('logFileSettings').style.display = output === 'file' ? 'grid' : 'none';
     }
-    // Listen for select change
-    document.getElementById('settingLogOutput').addEventListener('change', toggleLogFileSettings);
 
     async function handleSettingsSave(e) {
       e.preventDefault();
       const saveBtn = e.target.querySelector('button[type="submit"]');
       const originalText = saveBtn.textContent;
-      saveBtn.disabled = true;
-      saveBtn.textContent = '保存中...';
-      saveBtn.style.opacity = '0.6';
 
-      const p = {
-        external_ip: document.getElementById('settingExternalIP').value,
-        probe_target: document.getElementById('settingProbeTarget').value,
-        skip_cert_verify: document.getElementById('settingSkipCertVerify').checked,
-        log: {
-          output: document.getElementById('settingLogOutput').value,
-          max_size: parseInt(document.getElementById('settingLogMaxSize').value) || 50,
-          max_backups: parseInt(document.getElementById('settingLogMaxBackups').value) || 3,
-          max_age: parseInt(document.getElementById('settingLogMaxAge').value) || 7,
-          compress: document.getElementById('settingLogCompress').checked,
-        },
-        geoip: {
-          enabled: document.getElementById('settingGeoIPEnabled').checked,
-        }
-      };
-      try {
-        const r = await fetch('/api/settings', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(p)});
-        if(!r.ok) { showToast('保存失败', 'error'); return; }
-      } catch(e){ showToast('保存失败', 'error'); return; } finally { saveBtn.disabled = false; saveBtn.textContent = originalText; saveBtn.style.opacity = '1'; }
-
-      // Save subscription config separately (hot-reload) — skip if unchanged
+      // Build current snapshots for change detection
+      const currentCoreSnapshot = _buildCoreSnapshot();
       const subURLs = document.getElementById('settingSubURLs').value.split('\n').map(s => s.trim()).filter(s => s);
       const subEnabled = document.getElementById('settingSubEnabled').checked;
       const subInterval = document.getElementById('settingSubInterval').value;
       const currentSubSnapshot = JSON.stringify({urls: subURLs.join('\n'), enabled: subEnabled, interval: subInterval});
+
+      const coreChanged = currentCoreSnapshot !== _savedCoreSnapshot;
       const subChanged = currentSubSnapshot !== _savedSubSnapshot;
 
-      if (subChanged) {
-        if (subURLs.length > 0) {
-          saveBtn.disabled = true;
-          saveBtn.textContent = '更新订阅中...';
-          saveBtn.style.opacity = '0.6';
-        }
-        const subPayload = {
-          subscriptions: subURLs,
-          enabled: subEnabled,
-          interval: subInterval,
+      if (!coreChanged && !subChanged) {
+        showToast('配置未变更'); return;
+      }
+
+      // Save core settings if changed
+      if (coreChanged) {
+        saveBtn.disabled = true; saveBtn.textContent = '保存中...'; saveBtn.style.opacity = '0.6';
+        const p = {
+          external_ip: document.getElementById('settingExternalIP').value,
+          probe_target: document.getElementById('settingProbeTarget').value,
+          skip_cert_verify: document.getElementById('settingSkipCertVerify').checked,
+          mode: document.getElementById('settingMode').value,
+          listener: {
+            address: document.getElementById('settingListenerAddr').value,
+            port: parseInt(document.getElementById('settingListenerPort').value) || 0,
+            username: document.getElementById('settingListenerUser').value,
+            password: document.getElementById('settingListenerPass').value,
+          },
+          multi_port: {
+            address: document.getElementById('settingMPAddr').value,
+            base_port: parseInt(document.getElementById('settingMPBasePort').value) || 0,
+            username: document.getElementById('settingMPUser').value,
+            password: document.getElementById('settingMPPass').value,
+          },
+          pool: {
+            mode: document.getElementById('settingPoolMode').value,
+            failure_threshold: parseInt(document.getElementById('settingPoolFailure').value) || 3,
+            blacklist_duration: document.getElementById('settingPoolBlacklist').value || '24h',
+          },
+          management: {
+            listen: document.getElementById('settingMgmtListen').value,
+            password: document.getElementById('settingMgmtPassword').value,
+          },
+          log: {
+            output: document.getElementById('settingLogOutput').value,
+            max_size: parseInt(document.getElementById('settingLogMaxSize').value) || 50,
+            max_backups: parseInt(document.getElementById('settingLogMaxBackups').value) || 3,
+            max_age: parseInt(document.getElementById('settingLogMaxAge').value) || 7,
+            compress: document.getElementById('settingLogCompress').checked,
+          },
+          geoip: {
+            enabled: document.getElementById('settingGeoIPEnabled').checked,
+            database_path: document.getElementById('settingGeoIPDBPath').value,
+            listen: document.getElementById('settingGeoIPListen').value,
+            port: parseInt(document.getElementById('settingGeoIPPort').value) || 0,
+            auto_update_enabled: document.getElementById('settingGeoIPAutoUpdate').checked,
+            auto_update_interval: document.getElementById('settingGeoIPUpdateInterval').value || '24h',
+          }
         };
         try {
+          const r = await fetch('/api/settings', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(p)});
+          if(!r.ok) { showToast('保存失败', 'error'); saveBtn.disabled = false; saveBtn.textContent = originalText; saveBtn.style.opacity = '1'; return; }
+        } catch(e){ showToast('保存失败', 'error'); saveBtn.disabled = false; saveBtn.textContent = originalText; saveBtn.style.opacity = '1'; return; }
+        _savedCoreSnapshot = currentCoreSnapshot;
+      }
+
+      // Save subscription config if changed
+      if (subChanged) {
+        showFullscreenLoading('更新订阅中...', '正在拉取订阅并重载节点，请稍候');
+        const subPayload = { subscriptions: subURLs, enabled: subEnabled, interval: subInterval };
+        try {
           const sr = await fetch('/api/subscription/config', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(subPayload)});
-          if(!sr.ok) { showToast('订阅配置保存失败', 'error'); return; }
+          hideFullscreenLoading();
+          if(!sr.ok) { showToast('订阅配置保存失败', 'error'); saveBtn.disabled = false; saveBtn.textContent = originalText; saveBtn.style.opacity = '1'; return; }
           const sd = await sr.json();
+          _savedSubSnapshot = currentSubSnapshot;
           if (sd.refresh_error) {
             showToast('订阅已保存，但刷新失败: ' + sd.refresh_error, 'error');
           } else if (sd.node_count !== undefined) {
-            showToast('设置已保存，已获取 ' + sd.node_count + ' 个节点');
+            showToast('已保存，获取 ' + sd.node_count + ' 个节点');
           } else {
-            showToast('设置已保存（日志设置重启后生效）');
+            showToast('设置已保存');
           }
-        } catch(e){ showToast('订阅配置保存失败', 'error'); return; } finally { saveBtn.disabled = false; saveBtn.textContent = originalText; saveBtn.style.opacity = '1'; }
-      } else {
-        showToast('设置已保存');
+        } catch(e){ hideFullscreenLoading(); showToast('订阅配置保存失败', 'error'); saveBtn.disabled = false; saveBtn.textContent = originalText; saveBtn.style.opacity = '1'; return; }
+      } else if (coreChanged) {
+        // Core changed but no sub change — trigger reload
+        showFullscreenLoading('重载核心中...', '正在应用新配置');
+        try {
+          const rr = await fetch('/api/reload', {method:'POST'});
+          hideFullscreenLoading();
+          if (rr.ok) { showToast('已保存并重载成功'); } else { showToast('已保存，重载失败', 'error'); }
+        } catch(e) { hideFullscreenLoading(); showToast('已保存，重载失败', 'error'); }
       }
-
-      document.getElementById('settingsOverlay').classList.remove('show');
+      saveBtn.disabled = false; saveBtn.textContent = originalText; saveBtn.style.opacity = '1';
       refresh();
     }
 
@@ -1447,9 +1653,13 @@
         const d = await r.json();
         if (d.logs) {
           const ta = document.getElementById('consoleLogs');
+          const autoScroll = document.getElementById('autoScrollLogs').checked;
+          const prevTop = ta.scrollTop;
           ta.value = d.logs;
-          if (document.getElementById('autoScrollLogs').checked) {
+          if (autoScroll) {
              ta.scrollTop = ta.scrollHeight;
+          } else {
+             ta.scrollTop = prevTop;
           }
         }
       } catch(e){}

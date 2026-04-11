@@ -8,6 +8,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"easy_proxies/internal/app"
 	"easy_proxies/internal/config"
@@ -20,8 +22,18 @@ func main() {
 	flag.StringVar(&configPath, "config", "config.yaml", "path to config file")
 	flag.Parse()
 
-	cfg, err := config.Load(configPath)
-	if err != nil {
+	var cfg *config.Config
+	for attempt := 1; attempt <= 3; attempt++ {
+		var err error
+		cfg, err = config.Load(configPath)
+		if err == nil {
+			break
+		}
+		if attempt < 3 && strings.Contains(err.Error(), "config.nodes cannot be empty") {
+			log.Printf("⚠️  Attempt %d/3: %v (retrying in %ds...)", attempt, err, attempt*10)
+			time.Sleep(time.Duration(attempt*10) * time.Second)
+			continue
+		}
 		log.Fatalf("load config: %v", err)
 	}
 

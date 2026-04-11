@@ -13,6 +13,7 @@ import (
 
 	"easy_proxies/internal/builder"
 	"easy_proxies/internal/config"
+	"easy_proxies/internal/geoip"
 	"easy_proxies/internal/monitor"
 	"easy_proxies/internal/outbound/pool"
 
@@ -55,6 +56,7 @@ type Manager struct {
 	currentBox    *box.Box
 	monitorMgr    *monitor.Manager
 	monitorServer *monitor.Server
+	geoRouter     *geoip.Router
 	cfg           *config.Config
 	monitorCfg    monitor.Config
 
@@ -157,6 +159,12 @@ func (m *Manager) Start(ctx context.Context) error {
 	}
 
 	m.logger.Infof("sing-box instance started with %d nodes", len(cfg.Nodes))
+
+	// Start GeoIP router if enabled
+	if cfg.GeoIP.Enabled {
+		m.startGeoIPRouter(ctx, cfg)
+	}
+
 	return nil
 }
 
@@ -191,9 +199,18 @@ func (m *Manager) Reload(newCfg *config.Config) error {
 		if err := oldBox.Close(); err != nil {
 			m.logger.Warnf("error closing old instance: %v", err)
 		}
-		// Give OS time to release ports
-		time.Sleep(500 * time.Millisecond)
 	}
+
+	// Stop GeoIP router before starting new box to release its port
+	m.mu.Lock()
+	if m.geoRouter != nil {
+		m.geoRouter.Stop()
+		m.geoRouter = nil
+	}
+	m.mu.Unlock()
+
+	// Give OS time to release ports
+	time.Sleep(500 * time.Millisecond)
 
 	// Reset shared state store to ensure clean state for new config
 	pool.ResetSharedStateStore()
@@ -236,12 +253,30 @@ func (m *Manager) Reload(newCfg *config.Config) error {
 	m.cfg = newCfg
 	m.mu.Unlock()
 
+	// Sync config to monitor server so future WebUI settings changes target the current config pointer
+	if m.monitorServer != nil {
+		m.monitorServer.SetConfig(m.cfg)
+	}
+
 	// Trigger initial health check for newly registered nodes
 	if m.monitorMgr != nil {
 		go m.monitorMgr.ProbeAllNow(periodicHealthTimeout)
 	}
 
 	m.logger.Infof("reload completed successfully with %d nodes", len(newCfg.Nodes))
+
+	// Restart GeoIP router with new pools
+	if newCfg.GeoIP.Enabled {
+		m.startGeoIPRouter(ctx, newCfg)
+	} else {
+		m.mu.Lock()
+		if m.geoRouter != nil {
+			m.geoRouter.Stop()
+			m.geoRouter = nil
+		}
+		m.mu.Unlock()
+	}
+
 	return nil
 }
 
@@ -265,6 +300,10 @@ func (m *Manager) rollbackToOldConfig(ctx context.Context, oldCfg *config.Config
 	m.currentBox = instance
 	m.cfg = oldCfg
 	m.mu.Unlock()
+	// Sync config pointer to monitor server after rollback
+	if m.monitorServer != nil {
+		m.monitorServer.SetConfig(m.cfg)
+	}
 	m.logger.Infof("rollback successful")
 }
 
@@ -287,6 +326,10 @@ func (m *Manager) Close() error {
 		m.monitorMgr = nil
 		m.healthCheckStarted = false
 	}
+	if m.geoRouter != nil {
+		m.geoRouter.Stop()
+		m.geoRouter = nil
+	}
 	m.baseCtx = nil
 	return err
 }
@@ -303,6 +346,58 @@ func (m *Manager) MonitorServer() *monitor.Server {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return m.monitorServer
+}
+
+// startGeoIPRouter starts the GeoIP region-routing HTTP proxy server.
+func (m *Manager) startGeoIPRouter(ctx context.Context, cfg *config.Config) {
+	// Stop existing router if any
+	m.mu.Lock()
+	if m.geoRouter != nil {
+		m.geoRouter.Stop()
+		m.geoRouter = nil
+	}
+	m.mu.Unlock()
+
+	geoipPort := cfg.GeoIP.Port
+	if geoipPort == 0 {
+		geoipPort = 2323
+	}
+	geoipListen := cfg.GeoIP.Listen
+	if geoipListen == "" {
+		geoipListen = cfg.Listener.Address
+	}
+
+	routerCfg := geoip.RouterConfig{
+		Listen:   geoipListen,
+		Port:     geoipPort,
+		Username: cfg.Listener.Username,
+		Password: cfg.Listener.Password,
+	}
+
+	router := geoip.NewRouter(routerCfg, nil)
+
+	// Register region pool dialers
+	for _, region := range geoip.AllRegions() {
+		poolTag := fmt.Sprintf("pool-%s", region)
+		if dialer, ok := pool.GetDialer(poolTag); ok {
+			router.SetPool(region, dialer)
+			log.Printf("   GeoIP: registered pool %s for region /%s", poolTag, region)
+		}
+	}
+
+	// Register global pool dialer (for requests without region path)
+	if dialer, ok := pool.GetDialer(pool.Tag); ok {
+		router.SetGlobalPool(dialer)
+	}
+
+	if err := router.Start(ctx); err != nil {
+		m.logger.Warnf("failed to start GeoIP router: %v", err)
+		return
+	}
+
+	m.mu.Lock()
+	m.geoRouter = router
+	m.mu.Unlock()
 }
 
 // createBox builds a sing-box instance from config.
@@ -519,6 +614,10 @@ func (m *Manager) ensureMonitor(ctx context.Context) error {
 		if m.monitorServer == nil {
 			serverToStart = monitor.NewServer(m.monitorCfg, monitorMgr, log.Default())
 			m.monitorServer = serverToStart
+		}
+		// Set config early so WebUI has data before Start() completes
+		if m.monitorServer != nil && m.cfg != nil {
+			m.monitorServer.SetConfig(m.cfg)
 		}
 		// Set NodeManager for config CRUD endpoints
 		if m.monitorServer != nil {
@@ -819,6 +918,11 @@ func (m *Manager) copyConfigLocked() *config.Config {
 	}
 	cloned := *m.cfg
 	cloned.Nodes = cloneNodes(m.cfg.Nodes)
+	// Clone Subscriptions slice to avoid shared backing array issues
+	if len(m.cfg.Subscriptions) > 0 {
+		cloned.Subscriptions = make([]string, len(m.cfg.Subscriptions))
+		copy(cloned.Subscriptions, m.cfg.Subscriptions)
+	}
 	cloned.SetFilePath(m.cfg.FilePath())
 	return &cloned
 }

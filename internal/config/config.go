@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -306,6 +307,14 @@ func (c *Config) normalize() error {
 			}
 		}
 		c.Nodes = append(c.Nodes, subNodes...)
+		// Fallback: if all subscriptions failed, try loading cached nodes.txt
+		if len(subNodes) == 0 && c.NodesFile != "" {
+			cachedNodes, err := loadNodesFromFile(c.NodesFile)
+			if err == nil && len(cachedNodes) > 0 {
+				log.Printf("⚠️  All subscriptions failed, using %d cached nodes from %s", len(cachedNodes), c.NodesFile)
+				c.Nodes = append(c.Nodes, cachedNodes...)
+			}
+		}
 	}
 
 	if len(c.Nodes) == 0 {
@@ -722,6 +731,27 @@ func IsProxyURI(s string) bool {
 }
 
 // clashConfig represents a minimal Clash configuration for parsing proxies
+// flexInt handles YAML values that may be either int or quoted string.
+type flexInt int
+
+func (fi *flexInt) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var intVal int
+	if err := unmarshal(&intVal); err == nil {
+		*fi = flexInt(intVal)
+		return nil
+	}
+	var strVal string
+	if err := unmarshal(&strVal); err != nil {
+		return fmt.Errorf("cannot unmarshal port: expected int or string")
+	}
+	parsed, err := strconv.Atoi(strVal)
+	if err != nil {
+		return fmt.Errorf("cannot parse port %q as int: %w", strVal, err)
+	}
+	*fi = flexInt(parsed)
+	return nil
+}
+
 type clashConfig struct {
 	Proxies []clashProxy `yaml:"proxies"`
 }
@@ -730,7 +760,7 @@ type clashProxy struct {
 	Name              string                 `yaml:"name"`
 	Type              string                 `yaml:"type"`
 	Server            string                 `yaml:"server"`
-	Port              int                    `yaml:"port"`
+	Port              flexInt                `yaml:"port"`
 	UUID              string                 `yaml:"uuid"`
 	Password          string                 `yaml:"password"`
 	Cipher            string                 `yaml:"cipher"`
@@ -841,7 +871,7 @@ func buildVMessURI(p clashProxy) string {
 		query = "?" + params.Encode()
 	}
 
-	return fmt.Sprintf("vmess://%s@%s:%d%s#%s", p.UUID, p.Server, p.Port, query, url.QueryEscape(p.Name))
+	return fmt.Sprintf("vmess://%s@%s:%d%s#%s", p.UUID, p.Server, int(p.Port), query, url.QueryEscape(p.Name))
 }
 
 func buildVLESSURI(p clashProxy) string {
@@ -889,7 +919,7 @@ func buildVLESSURI(p clashProxy) string {
 		params.Set("fp", p.ClientFingerprint)
 	}
 
-	return fmt.Sprintf("vless://%s@%s:%d?%s#%s", p.UUID, p.Server, p.Port, params.Encode(), url.QueryEscape(p.Name))
+	return fmt.Sprintf("vless://%s@%s:%d?%s#%s", p.UUID, p.Server, int(p.Port), params.Encode(), url.QueryEscape(p.Name))
 }
 
 func buildTrojanURI(p clashProxy) string {
@@ -922,7 +952,7 @@ func buildTrojanURI(p clashProxy) string {
 		query = "?" + params.Encode()
 	}
 
-	return fmt.Sprintf("trojan://%s@%s:%d%s#%s", p.Password, p.Server, p.Port, query, url.QueryEscape(p.Name))
+	return fmt.Sprintf("trojan://%s@%s:%d%s#%s", p.Password, p.Server, int(p.Port), query, url.QueryEscape(p.Name))
 }
 
 func buildAnyTLSURI(p clashProxy) string {
@@ -944,13 +974,13 @@ func buildAnyTLSURI(p clashProxy) string {
 		query = "?" + params.Encode()
 	}
 
-	return fmt.Sprintf("anytls://%s@%s:%d%s#%s", p.Password, p.Server, p.Port, query, url.QueryEscape(p.Name))
+	return fmt.Sprintf("anytls://%s@%s:%d%s#%s", p.Password, p.Server, int(p.Port), query, url.QueryEscape(p.Name))
 }
 
 func buildShadowsocksURI(p clashProxy) string {
 	// Encode method:password in base64
 	userInfo := base64.StdEncoding.EncodeToString([]byte(p.Cipher + ":" + p.Password))
-	return fmt.Sprintf("ss://%s@%s:%d#%s", userInfo, p.Server, p.Port, url.QueryEscape(p.Name))
+	return fmt.Sprintf("ss://%s@%s:%d#%s", userInfo, p.Server, int(p.Port), url.QueryEscape(p.Name))
 }
 
 func buildHysteria2URI(p clashProxy) string {
@@ -969,7 +999,7 @@ func buildHysteria2URI(p clashProxy) string {
 		query = "?" + params.Encode()
 	}
 
-	return fmt.Sprintf("hysteria2://%s@%s:%d%s#%s", p.Password, p.Server, p.Port, query, url.QueryEscape(p.Name))
+	return fmt.Sprintf("hysteria2://%s@%s:%d%s#%s", p.Password, p.Server, int(p.Port), query, url.QueryEscape(p.Name))
 }
 
 func buildTUICURI(p clashProxy) string {
@@ -998,7 +1028,7 @@ func buildTUICURI(p clashProxy) string {
 	}
 
 	// TUIC URI format: tuic://uuid:password@server:port?params#name
-	return fmt.Sprintf("tuic://%s:%s@%s:%d%s#%s", p.UUID, p.Password, p.Server, p.Port, query, url.QueryEscape(p.Name))
+	return fmt.Sprintf("tuic://%s:%s@%s:%d%s#%s", p.UUID, p.Password, p.Server, int(p.Port), query, url.QueryEscape(p.Name))
 }
 
 // FilePath returns the config file path.
@@ -1136,6 +1166,11 @@ func (c *Config) SaveSettings() error {
 	saveCfg.Subscriptions = c.Subscriptions
 	saveCfg.SubscriptionRefresh = c.SubscriptionRefresh
 	saveCfg.GeoIP = c.GeoIP
+	saveCfg.Mode = c.Mode
+	saveCfg.Listener = c.Listener
+	saveCfg.MultiPort = c.MultiPort
+	saveCfg.Pool = c.Pool
+	saveCfg.Management = c.Management
 
 	newData, err := yaml.Marshal(&saveCfg)
 	if err != nil {

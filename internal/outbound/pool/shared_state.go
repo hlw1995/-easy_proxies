@@ -46,6 +46,7 @@ func ResetSharedStateStore() {
 		sharedStateStore.Delete(key)
 		return true
 	})
+	ResetDialerRegistry()
 }
 
 func (s *sharedMemberState) attachEntry(entry *monitor.EntryHandle) {
